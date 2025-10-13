@@ -1,11 +1,9 @@
 import 'package:asmara_dine/features/menu/logic/event_bloc.dart';
 import 'package:asmara_dine/features/menu/logic/event_menu.dart';
 import 'package:asmara_dine/features/menu/presentation/menu_screen.dart';
-import 'package:asmara_dine/features/tables/logic/merge_table_bloc.dart';
 import 'package:asmara_dine/features/tables/logic/table_bloc.dart';
 import 'package:asmara_dine/features/tables/logic/table_state.dart';
 import 'package:asmara_dine/features/tables/models/table_model.dart';
-import 'package:asmara_dine/features/tables/widgets/merged_table_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -15,41 +13,33 @@ class TablesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-  child: const Icon(Icons.merge),
-  onPressed: () {
-    context.read<MergedTableBloc>().add(MergeTables([7, 8]));
-  },
-),
-
       extendBodyBehindAppBar: true,
       appBar: PreferredSize(
-  preferredSize: const Size.fromHeight(20), // <-- reduce height here
-  child: AppBar(
-    backgroundColor: Colors.transparent,
-    elevation: 0,
-    centerTitle: false,
-    title: const Text(
-      "",
-      style: TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: 20,
-        color: Colors.brown,
-      ),
-    ),
-    actions: [
-      Builder(
-        builder: (context) => IconButton(
-          icon: const Icon(Icons.menu, color: Colors.white),
-          onPressed: () {
-            Scaffold.of(context).openEndDrawer();
-          },
+        preferredSize: const Size.fromHeight(20), // <-- reduce height here
+        child: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: false,
+          title: const Text(
+            "",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+              color: Colors.brown,
+            ),
+          ),
+          actions: [
+            Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () {
+                  Scaffold.of(context).openEndDrawer();
+                },
+              ),
+            ),
+          ],
         ),
       ),
-    ],
-  ),
-),
-
       body: Stack(
         children: [
           // Background image with opacity
@@ -65,52 +55,34 @@ class TablesPage extends StatelessWidget {
               ),
             ),
           ),
-
           // Foreground content
           SafeArea(
-            child:BlocBuilder<MergedTableBloc, MergedTableState>(
-  builder: (context, mergedState) {
-    return BlocBuilder<TableBloc, TableState>(
-      builder: (context, state) {
-        if (state.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
+            child: BlocBuilder<TableBloc, TableState>(
+              builder: (context, state) {
+                if (state.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-        final size = MediaQuery.of(context).size;
-        final isTablet = size.width > 600;
-        final crossAxisCount = isTablet ? (size.width ~/ 200).clamp(3, 6) : 3;
+                final size = MediaQuery.of(context).size;
+                final isTablet = size.width > 600;
+                final crossAxisCount = isTablet ? (size.width ~/ 200).clamp(3, 6) : 3;
 
-        // 🧩 Collect merged IDs
-        final mergedIds =
-            mergedState.mergedTables.expand((m) => m.tableIds).toSet();
-
-        // Build merged tiles
-        final mergedTiles = mergedState.mergedTables.map((m) {
-          return MergedTableCard(mergedTable: m);
-        }).toList();
-
-        // Build normal tiles (excluding merged)
-        final singleTables = state.tables
-            .where((t) => !mergedIds.contains(t.id))
-            .map((t) => _TableCard(table: t, tableId: t.id))
-            .toList();
-
-        return GridView.count(
-          padding: const EdgeInsets.all(16),
-          crossAxisCount: crossAxisCount,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: isTablet ? 1.2 : 0.9,
-          children: [
-            ...mergedTiles,
-            ...singleTables,
-          ],
-        );
-      },
-    );
-  },
-),
-
+                return GridView.builder(
+                  padding: const EdgeInsets.all(16),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: isTablet ? 1.2 : 0.9,
+                  ),
+                  itemCount: state.tables.length,
+                  itemBuilder: (context, index) {
+                    final table = state.tables[index];
+                    return _TableCard(table: table, tableId: table.id);
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -121,7 +93,8 @@ class TablesPage extends StatelessWidget {
 class _TableCard extends StatelessWidget {
   final TableModel table;
   final tableId;
-  const _TableCard({required this.table,required this.tableId});
+
+  const _TableCard({required this.table, required this.tableId});
 
   @override
   Widget build(BuildContext context) {
@@ -129,15 +102,15 @@ class _TableCard extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-       Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (_) => BlocProvider(
-      create: (_) => MenuBloc(table.id)..add(LoadMenu()),
-      child: MenuScreen(tableNo:  table.id),
-    ),
-  ),
-);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => BlocProvider(
+              create: (_) => MenuBloc(table.id)..add(LoadMenu()),
+              child: MenuScreen(tableNo: table.id),
+            ),
+          ),
+        );
       },
       child: Container(
         decoration: BoxDecoration(
@@ -230,14 +203,14 @@ class _TableCard extends StatelessWidget {
 class _StatusDot extends StatefulWidget {
   final Color color;
   final bool isOccupied;
+
   const _StatusDot({required this.color, this.isOccupied = false});
 
   @override
   State<_StatusDot> createState() => _StatusDotState();
 }
 
-class _StatusDotState extends State<_StatusDot>
-    with SingleTickerProviderStateMixin {
+class _StatusDotState extends State<_StatusDot> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _opacity;
 
