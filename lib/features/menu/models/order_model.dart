@@ -1,10 +1,11 @@
-
 class Order {
   final int tableId;
   final List<OrderItem> items;
   final double subtotal;
   final double tax;
   final double grandTotal;
+  final int orderId; // new, optional unique id per batch
+  final DateTime createdAt; // new, timestamp
 
   Order({
     required this.tableId,
@@ -12,7 +13,28 @@ class Order {
     required this.subtotal,
     required this.tax,
     required this.grandTotal,
-  });
+    this.orderId = 0,
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now();
+  Order copyWith({
+    int? tableId,
+    List<OrderItem>? items,
+    double? subtotal,
+    double? tax,
+    double? grandTotal,
+    int? orderId,
+    DateTime? createdAt,
+  }) {
+    return Order(
+      tableId: tableId ?? this.tableId,
+      items: items ?? this.items,
+      subtotal: subtotal ?? this.subtotal,
+      tax: tax ?? this.tax,
+      grandTotal: grandTotal ?? this.grandTotal,
+      orderId: orderId ?? this.orderId,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 
   factory Order.fromJson(Map<String, dynamic> json) {
     return Order(
@@ -23,6 +45,8 @@ class Order {
       subtotal: (json['subtotal'] as num).toDouble(),
       tax: (json['tax'] as num).toDouble(),
       grandTotal: (json['grandTotal'] as num).toDouble(),
+      orderId: json['orderId'] ?? 0,
+      createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
     );
   }
 }
@@ -52,4 +76,3 @@ class OrderItem {
     );
   }
 }
-

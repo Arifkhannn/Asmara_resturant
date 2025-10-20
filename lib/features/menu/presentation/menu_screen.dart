@@ -6,7 +6,9 @@ import 'package:asmara_dine/features/menu/presentation/order_review.dart';
 import 'package:asmara_dine/features/menu/presentation/widgets/category_tab.dart';
 import 'package:asmara_dine/features/menu/presentation/widgets/menuItem_card.dart';
 import 'package:asmara_dine/features/menu/presentation/widgets/order_summary.dart';
+import 'package:asmara_dine/features/menu/presentation/widgets/previous_order_sheet.dart';
 import 'package:asmara_dine/features/menu/presentation/widgets/search_bar.dart';
+
 import 'package:asmara_dine/features/tables/logic/table_bloc.dart';
 import 'package:asmara_dine/features/tables/logic/table_event.dart';
 import 'package:flutter/material.dart';
@@ -150,6 +152,53 @@ class _MenuScreenState extends State<MenuScreen> {
                 ),
               );
             },
+          );
+        },
+      ),
+
+      // Floating Button for Previous Orders
+      floatingActionButton: BlocBuilder<MenuBloc, MenuState>(
+        builder: (context, state) {
+          if (state.allOrders.isEmpty) return const SizedBox.shrink();
+
+          return FloatingActionButton.extended(
+            backgroundColor: Colors.green,
+            icon: const Icon(Icons.history, color: Colors.white),
+            label: const Text("View Orders", style: TextStyle(color: Colors.white)),
+            onPressed: () {
+               Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider.value(
+                    value: context.read<MenuBloc>(),
+                    child: const OrderReviewScreen(),
+                  ),
+                ),
+              );
+              
+  final menuBloc = context.read<MenuBloc>(); // capture parent context here
+
+  /*showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.white,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (_) => DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.6,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      builder: (context, scrollController) {
+        return BlocProvider.value(
+          value: menuBloc, // use captured bloc here
+          child: PreviousOrdersSheet(scrollController: scrollController),
+        );
+      },
+    ),
+  );*/
+},
+
           );
         },
       ),
