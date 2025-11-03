@@ -1,5 +1,3 @@
-
-
 import 'package:asmara_dine/features/menu/data/menu_api.dart';
 import 'package:asmara_dine/features/menu/logic/event_menu.dart';
 import 'package:asmara_dine/features/menu/logic/event_state.dart';
@@ -7,17 +5,21 @@ import 'package:asmara_dine/features/menu/models/order_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MenuBloc extends Bloc<MenuEvent, MenuState> {
-  static final Map<int, MenuState> _tableStates = {};
+  // Keyed by joined tableIds string e.g. "2" or "2-3" or "4-7-8"
+  static final Map<String, MenuState> _tableStates = {};
   final MenuApiService _menuApiService = MenuApiService();
-  final int tableId;
+  final List<int> tableIds;
+  final String _tableKey;
 
-  MenuBloc(this.tableId)
-      : super(
-          _tableStates[tableId] ??
+  MenuBloc(this.tableIds)
+      : _tableKey = _tableKeyFrom(tableIds),
+        super(
+          _tableStates[_tableKeyFrom(tableIds)] ??
               MenuState(
                 categories: [],
                 order: Order(
-                  tableId: tableId,
+                  tableId: tableIds.isNotEmpty ? tableIds.first : 0,
+                  tableIds: tableIds,
                   items: [],
                   subtotal: 0,
                   tax: 0,
@@ -34,6 +36,11 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
     on<CompleteOrder>(_onCompleteOrder);
   }
 
+  static String _tableKeyFrom(List<int> ids) {
+    final sorted = [...ids]..sort();
+    return sorted.join('-');
+  }
+
   // ------------------- Load Menu -------------------
   Future<void> _onLoadMenu(LoadMenu event, Emitter<MenuState> emit) async {
     try {
@@ -47,50 +54,46 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
   }
 
   // ------------------- Add Item -------------------
-  // inside event_bloc.dart (MenuBloc)
-void _onAddItem(AddItemToOrder event, Emitter<MenuState> emit) {
-  final items = [...state.order.items];
-  final index = items.indexWhere((i) => i.itemId == event.item.itemId);
+  void _onAddItem(AddItemToOrder event, Emitter<MenuState> emit) {
+    final items = [...state.order.items];
+    final index = items.indexWhere((i) => i.itemId == event.item.itemId);
 
-  if (index >= 0) {
-    final updated = items[index];
-    items[index] = OrderItem(
-      itemId: updated.itemId,
-      name: updated.name,
-      quantity: updated.quantity + 1,
-      price: updated.price,
-      total: updated.total + updated.price,
+    if (index >= 0) {
+      final updated = items[index];
+      items[index] = OrderItem(
+        itemId: updated.itemId,
+        name: updated.name,
+        quantity: updated.quantity + 1,
+        price: updated.price,
+        total: updated.total + updated.price,
+      );
+    } else {
+      items.add(OrderItem(
+        itemId: event.item.itemId,
+        name: event.item.name,
+        quantity: 1,
+        price: event.item.price,
+        total: event.item.price,
+      ));
+    }
+
+    final subtotal = items.fold(0.0, (sum, i) => sum + i.total);
+    final tax = subtotal * 0.1;
+    final grandTotal = subtotal + tax;
+
+    final updatedState = state.copyWith(
+      order: state.order.copyWith(
+        items: items,
+        subtotal: subtotal,
+        tax: tax,
+        grandTotal: grandTotal,
+      ),
+      orderPlaced: false,
     );
-  } else {
-    items.add(OrderItem(
-      itemId: event.item.itemId,
-      name: event.item.name,
-      quantity: 1,
-      price: event.item.price,
-      total: event.item.price,
-    ));
+
+    _persistState(updatedState);
+    emit(updatedState);
   }
-
-  final subtotal = items.fold(0.0, (sum, i) => sum + i.total);
-  final tax = subtotal * 0.1;
-  final grandTotal = subtotal + tax;
-
-  // NOTE: reset orderPlaced so UI shows Place Order when new items are added
-  final updatedState = state.copyWith(
-    order: Order(
-      tableId: state.order.tableId,
-      items: items,
-      subtotal: subtotal,
-      tax: tax,
-      grandTotal: grandTotal,
-    ),
-    orderPlaced: false, // <--- important
-  );
-
-  _persistState(updatedState);
-  emit(updatedState);
-}
-
 
   // ------------------- Remove Item -------------------
   void _onRemoveItem(RemoveItemFromOrder event, Emitter<MenuState> emit) {
@@ -117,8 +120,7 @@ void _onAddItem(AddItemToOrder event, Emitter<MenuState> emit) {
     final grandTotal = subtotal + tax;
 
     final updatedState = state.copyWith(
-      order: Order(
-        tableId: state.order.tableId,
+      order: state.order.copyWith(
         items: items,
         subtotal: subtotal,
         tax: tax,
@@ -138,9 +140,10 @@ void _onAddItem(AddItemToOrder event, Emitter<MenuState> emit) {
     // Append this batch to allOrders
     final updatedAllOrders = [...state.allOrders, newOrderBatch];
 
-    // Reset current order for next additions
+    // Reset current order for next additions (preserve tableIds)
     final resetOrder = Order(
       tableId: state.order.tableId,
+      tableIds: state.order.tableIds,
       items: [],
       subtotal: 0,
       tax: 0,
@@ -159,11 +162,12 @@ void _onAddItem(AddItemToOrder event, Emitter<MenuState> emit) {
 
   // ------------------- Complete Order -------------------
   void _onCompleteOrder(CompleteOrder event, Emitter<MenuState> emit) {
-    // At this point you could send allOrders to your POS API
+    // Reset menu session for these tableIds
     final resetState = MenuState(
       categories: state.categories,
       order: Order(
         tableId: state.order.tableId,
+        tableIds: state.order.tableIds,
         items: [],
         subtotal: 0,
         tax: 0,
@@ -179,6 +183,6 @@ void _onAddItem(AddItemToOrder event, Emitter<MenuState> emit) {
 
   // ------------------- Helper -------------------
   void _persistState(MenuState newState) {
-    _tableStates[state.order.tableId] = newState;
+    _tableStates[_tableKey] = newState;
   }
 }

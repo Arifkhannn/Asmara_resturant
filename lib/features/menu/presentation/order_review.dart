@@ -1,3 +1,7 @@
+// lib/features/menu/presentation/order_review.dart
+
+import 'dart:convert';
+
 import 'package:asmara_dine/features/menu/logic/event_bloc.dart';
 import 'package:asmara_dine/features/menu/logic/event_menu.dart';
 import 'package:asmara_dine/features/menu/logic/event_state.dart';
@@ -6,6 +10,7 @@ import 'package:asmara_dine/features/tables/logic/table_event.dart';
 import 'package:asmara_dine/features/tables/presentation/table_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:http/http.dart' as http;
 
 class OrderReviewScreen extends StatefulWidget {
   const OrderReviewScreen({super.key});
@@ -36,7 +41,6 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
       ),
       backgroundColor: Colors.grey.shade100,
 
-      // BODY same as before
       body: BlocBuilder<MenuBloc, MenuState>(
         builder: (context, state) {
           final currentOrder = state.order;
@@ -66,8 +70,9 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                     imageUrl: menuItem.image,
                     onAdd: () =>
                         context.read<MenuBloc>().add(AddItemToOrder(menuItem)),
-                    onRemove: () =>
-                        context.read<MenuBloc>().add(RemoveItemFromOrder(menuItem)),
+                    onRemove: () => context.read<MenuBloc>().add(
+                      RemoveItemFromOrder(menuItem),
+                    ),
                   );
                 }),
                 const SizedBox(height: 16),
@@ -84,7 +89,8 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                       controller: _noteController,
                       maxLines: 3,
                       decoration: const InputDecoration(
-                        hintText: "Add any special instructions (e.g., less spicy)...",
+                        hintText:
+                            "Add any special instructions (e.g., less spicy)...",
                         border: InputBorder.none,
                       ),
                     ),
@@ -100,47 +106,63 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
               if (hasPrevious) ...[
                 const _SectionTitle(title: "Previous Orders"),
                 const SizedBox(height: 8),
-                ...previousOrders.map((order) => Card(
-                      elevation: 2,
-                      margin: const EdgeInsets.only(bottom: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("Order #${order.orderId ?? '-'}",
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w600, fontSize: 15)),
-                            const SizedBox(height: 8),
-                            ...order.items.map((item) => Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 4),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(item.name,
-                                            style:
-                                                const TextStyle(fontSize: 14)),
-                                      ),
-                                      Text("x${item.quantity}",
-                                          style: const TextStyle(
-                                              color: Colors.grey, fontSize: 13)),
-                                      const SizedBox(width: 6),
-                                      Text("€${item.total.toStringAsFixed(2)}",
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 14)),
-                                    ],
+                ...previousOrders.map(
+                  (order) => Card(
+                    elevation: 2,
+                    margin: const EdgeInsets.only(bottom: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Order #${order.orderId ?? '-'}",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          ...order.items.map(
+                            (item) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      item.name,
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
                                   ),
-                                )),
-                          ],
-                        ),
+                                  Text(
+                                    "x${item.quantity}",
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    "€${item.total.toStringAsFixed(2)}",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    )),
+                    ),
+                  ),
+                ),
               ],
               const SizedBox(height: 100),
             ],
@@ -148,7 +170,6 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
         },
       ),
 
-      // BOTTOM BAR (unchanged, still shows Place Order when hasCurrent && !orderPlaced)
       bottomNavigationBar: BlocBuilder<MenuBloc, MenuState>(
         builder: (context, state) {
           final hasPrevious = state.allOrders.isNotEmpty;
@@ -167,48 +188,64 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
         },
       ),
 
-      // ----------------- NEW: floatingActionButton -----------------
-      // Show a prominent FAB to "Complete Order" whenever there are previous orders.
-      // This keeps it separate from bottom bar Place Order flow.
+      // ----------------- Complete Order FAB -----------------
       floatingActionButton: BlocBuilder<MenuBloc, MenuState>(
         builder: (context, state) {
-          // If there are no previous orders, don't show the FAB.
           if (state.allOrders.isEmpty) return const SizedBox.shrink();
 
-          // Show a red "Complete Order" FAB that completes all placed orders and frees table.
+          final mergedTableIds = state.order.tableIds;
+
           return FloatingActionButton.extended(
             backgroundColor: Colors.red.shade600,
             icon: const Icon(Icons.check_circle_outline, color: Colors.white),
-            label: const Text("Complete Order", style: TextStyle(color: Colors.white)),
+            label: const Text(
+              "Complete Order",
+              style: TextStyle(color: Colors.white),
+            ),
             onPressed: () {
-              // Confirm before completing
               showDialog(
                 context: context,
                 builder: (_) => AlertDialog(
                   title: const Text('Complete Order'),
                   content: Text(
-                    'Complete all placed orders for Table ${state.order.tableId} and release the table?',
+                    'Complete all placed orders for Tables ${mergedTableIds.join(", ")} and release them?',
                   ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancel', style: TextStyle(color: Colors.red)),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(color: Colors.red),
+                      ),
                     ),
                     ElevatedButton(
                       onPressed: () {
-                        // Complete orders and free table
+                        // Complete orders in MenuBloc
                         context.read<MenuBloc>().add(CompleteOrder());
-                        context.read<TableBloc>().add(TableStatusUpdated(
-                          tableId: state.order.tableId,
-                          status: "Free",
-                        ));
+
+                        // Free ALL merged tables (update TableBloc)
+                        for (final tid in mergedTableIds) {
+                          context.read<TableBloc>().add(
+                            TableStatusUpdated(tableId: tid, status: "free"),
+                          );
+                        }
+
+                        // Clear merged labels/visuals so the TableScreen shows separate free tables
+                       /* context.read<TableBloc>().add(
+                          ClearMergedTables(tableIds: mergedTableIds),
+                        );*/
 
                         Navigator.pop(context); // close dialog
+
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Orders completed, table released')),
+                          SnackBar(
+                            content: Text(
+                              'Orders completed, tables ${mergedTableIds.join(", ")} released',
+                            ),
+                          ),
                         );
 
-                        // Navigate back to tables screen
+                        // Go back to tables screen
                         Navigator.pushAndRemoveUntil(
                           context,
                           MaterialPageRoute(builder: (_) => const TablesPage()),
@@ -228,7 +265,7 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
   }
 }
 
-// ===== rest of widgets unchanged (copy your existing widgets) =====
+// ===== rest of widgets unchanged (same as your existing) =====
 
 class _OrderItemCard extends StatelessWidget {
   final String title;
@@ -273,12 +310,18 @@ class _OrderItemCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style:
-                          const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text("€${unitPrice.toStringAsFixed(2)} each",
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                  Text(
+                    "€${unitPrice.toStringAsFixed(2)} each",
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                  ),
                   const SizedBox(height: 6),
                   Row(
                     children: [
@@ -288,8 +331,10 @@ class _OrderItemCard extends StatelessWidget {
                         color: Colors.redAccent,
                         visualDensity: VisualDensity.compact,
                       ),
-                      Text(quantity.toString(),
-                          style: const TextStyle(fontWeight: FontWeight.w600)),
+                      Text(
+                        quantity.toString(),
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
                       IconButton(
                         icon: const Icon(Icons.add_circle_outline),
                         onPressed: onAdd,
@@ -297,11 +342,15 @@ class _OrderItemCard extends StatelessWidget {
                         visualDensity: VisualDensity.compact,
                       ),
                       const Spacer(),
-                      Text("€${total.toStringAsFixed(2)}",
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 15)),
+                      Text(
+                        "€${total.toStringAsFixed(2)}",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
                     ],
-                  )
+                  ),
                 ],
               ),
             ),
@@ -330,13 +379,19 @@ class _TotalsCard extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(label,
-                    style: TextStyle(
-                        fontWeight: bold ? FontWeight.w700 : FontWeight.w500)),
-                Text(value,
-                    style: TextStyle(
-                        fontWeight: bold ? FontWeight.w700 : FontWeight.w600,
-                        color: bold ? Colors.green.shade800 : null)),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontWeight: bold ? FontWeight.w700 : FontWeight.w600,
+                    color: bold ? Colors.green.shade800 : null,
+                  ),
+                ),
               ],
             ),
           );
@@ -392,8 +447,10 @@ class _OrderBottomBar extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'Payable: €${state.fullGrandTotal.toStringAsFixed(2)}',
-                    style:
-                        const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
                 if (showPlaceOrder)
@@ -412,28 +469,100 @@ class _OrderBottomBar extends StatelessWidget {
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
-                              child: const Text('Cancel',
-                                  style: TextStyle(color: Colors.red)),
+                              child: const Text(
+                                'Cancel',
+                                style: TextStyle(color: Colors.red),
+                              ),
                             ),
                             ElevatedButton(
-                              onPressed: () {
-                                context.read<MenuBloc>().add(PlaceOrder());
-                                context.read<TableBloc>().add(
-                                      TableStatusUpdated(
-                                          tableId: state.order.tableId,
-                                          status: "occupied"),
+                              onPressed: () async {
+                                //after intergating the api--
+                                final tableIds = state.order.tableIds;
+                                final orderItems = state.order.items
+                                    .map(
+                                      (item) => {
+                                        "id": item.itemId,
+                                        "qty": item.quantity,
+                                        "itemName": item.name,
+                                      },
+                                    )
+                                    .toList();
+
+                                final body = jsonEncode({
+                                  "tableIds": tableIds,
+                                  "orderItems": orderItems,
+                                  "note": noteController
+                                      .text, // ✅ send special note too
+                                });
+
+                                try {
+                                  final response = await http.post(
+                                    Uri.parse(
+                                      'https://asmara.dftech.in/api/orders/create',
+                                    ),
+                                    headers: {
+                                      'Accept': 'application/json',
+                                      'Content-Type': 'application/json',
+                                    },
+                                    body: body,
+                                  );
+
+                                  if (response.statusCode == 200) {
+                                    // ✅ API success: place order locally
+                                    context.read<MenuBloc>().add(PlaceOrder());
+
+                                    for (final tid in tableIds) {
+                                      context.read<TableBloc>().add(
+                                        TableStatusUpdated(
+                                          tableId: tid,
+                                          status: "occupied",
+                                        ),
+                                      );
+                                    }
+
+                                    Navigator.pop(context); // close dialog
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Order placed successfully 🎉',
+                                        ),
+                                      ),
                                     );
-                                Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Order placed successfully'),
-                                  ),
-                                );
+                                  } else {
+                                    // ❌ API failed: show sad emoji alert
+                                    Navigator.pop(context); // close dialog
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: const Text(
+                                          '😢 Sorry, the API is breaking. Please go to the main POS to place the order.',
+                                        ),
+                                        duration: const Duration(seconds: 5),
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  Navigator.pop(context); // close dialog
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: const Text(
+                                        '😢 Sorry, something went wrong. Please try again.',
+                                      ),
+                                      duration: const Duration(seconds: 5),
+                                    ),
+                                  );
+                                }
+
+                                context.read<MenuBloc>().add(PlaceOrder());
+
+                                // ✅ mark ALL merged tables as occupied
                               },
-                              child: const Text('Confirm',
-                                  style: TextStyle(
-                                      color: Colors.green,
-                                      fontWeight: FontWeight.w600)),
+                              child: const Text(
+                                'Confirm',
+                                style: TextStyle(
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -443,42 +572,15 @@ class _OrderBottomBar extends StatelessWidget {
                       backgroundColor: Colors.green.shade700,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 22, vertical: 14),
+                        horizontal: 22,
+                        vertical: 14,
+                      ),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                     child: const Text('Place Order'),
                   ),
-
-               /* if (showCompleteOrder)
-                  ElevatedButton(
-                    onPressed: () {
-                      context.read<MenuBloc>().add(CompleteOrder());
-                      context.read<TableBloc>().add(TableStatusUpdated(
-                        tableId: state.order.tableId,
-                        status: "Free",
-                      ));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Order completed, Table released'),
-                        ),
-                      );
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (_) => const TablesPage()),
-                        (route) => false,
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red.shade600,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 22, vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
-                    ),
-                    child: const Text('Complete Order'),
-                  ),*/
               ],
             ),
           ),
@@ -493,8 +595,10 @@ class _SectionTitle extends StatelessWidget {
   const _SectionTitle({required this.title});
   @override
   Widget build(BuildContext context) {
-    return Text(title,
-        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700));
+    return Text(
+      title,
+      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+    );
   }
 }
 
@@ -508,11 +612,16 @@ class _EmptyOrder extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.shopping_basket_outlined,
-                size: 64, color: Colors.grey.shade500),
+            Icon(
+              Icons.shopping_basket_outlined,
+              size: 64,
+              color: Colors.grey.shade500,
+            ),
             const SizedBox(height: 12),
-            Text('No items in the order',
-                style: TextStyle(color: Colors.grey.shade600)),
+            Text(
+              'No items in the order',
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
             const SizedBox(height: 8),
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
