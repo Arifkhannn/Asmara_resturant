@@ -17,3 +17,10 @@ class RemoveItemFromOrder extends MenuEvent {
 class PlaceOrder extends MenuEvent {}
 
 class CompleteOrder extends MenuEvent {}
+
+class LoadAllOrders extends MenuEvent {}
+
+class LoadExistingOrders extends MenuEvent {
+  final int tableId;
+  LoadExistingOrders(this.tableId);
+}

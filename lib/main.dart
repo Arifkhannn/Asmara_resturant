@@ -1,6 +1,7 @@
 import 'package:asmara_dine/core/splash_screen.dart';
 import 'package:asmara_dine/features/menu/logic/event_bloc.dart';
 import 'package:asmara_dine/features/menu/logic/event_menu.dart';
+import 'package:asmara_dine/features/menu/logic/order_id_memory.dart';
 import 'package:asmara_dine/features/tables/logic/merge_table_bloc.dart';
 import 'package:asmara_dine/features/tables/logic/table_bloc.dart';
 import 'package:asmara_dine/features/tables/presentation/table_screen.dart';
@@ -11,8 +12,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // ✅ Always clear order memory whenever app launches
+  await OrderMemory.instance.clearAll();
+
+  // ✅ Then initialize (loads empty state)
+  await OrderMemory.instance.init();
+
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {

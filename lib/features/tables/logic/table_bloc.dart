@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:asmara_dine/features/tables/data/table_status_api.dart';
 import 'package:asmara_dine/features/tables/logic/table_event.dart';
 import 'package:asmara_dine/features/tables/logic/table_state.dart';
 import 'package:asmara_dine/features/tables/models/table_model.dart';
@@ -22,33 +23,60 @@ class TableBloc extends Bloc<TableEvent, TableState> {
   Future<void> _initPusher() async {
     try {
       await pusher.init(
-        apiKey: "212af9d41c92442f4b94",
+        apiKey: "25139290d20213d2121a",
         cluster: "ap2",
         onEvent: (event) {
-          print("🔥 Pusher event received: ${event.data}");
+          print("📡 Pusher event: ${event.eventName}");
+          print("📡 Raw data: ${event.data}");
 
-          final data = jsonDecode(event.data);
+          if (event.data == null) {
+            print("⚠️ No data in event");
+            return;
+          }
 
-          if (data['tables'] != null) {
-            final tables = data['tables'];
+          Map<String, dynamic> data;
+          try {
+            data = jsonDecode(event.data!);
+          } catch (e) {
+            print("⚠️ JSON decode failed: $e");
+            return;
+          }
 
-            // Single table
-            if (tables is Map<String, dynamic>) {
-              add(TableStatusUpdated(
+          if (data['tables'] == null) {
+            print("⚠️ No 'tables' key in Pusher data!");
+            return;
+          }
+
+          final tables = data['tables'];
+
+          // Single table
+          if (tables is Map<String, dynamic>) {
+            print(
+              "📋 Single table update: ID=${tables['table_id']}, Status=${tables['status']}",
+            );
+            add(
+              TableStatusUpdated(
                 tableId: tables['table_id'],
                 status: tables['status'],
-              ));
-            }
-
-            // Multiple tables
-            else if (tables is List) {
-              for (var t in tables) {
-                add(TableStatusUpdated(
-                  tableId: t['table_id'],
-                  status: t['status'],
-                ));
+              ),
+            );
+          }
+          // Multiple tables
+          else if (tables is List) {
+            print("📋 Multiple tables update: ${tables.length} tables");
+            for (final t in tables) {
+              if (t is Map<String, dynamic>) {
+                print("   → Table ${t['table_id']} to ${t['status']}");
+                add(
+                  TableStatusUpdated(
+                    tableId: t['table_id'],
+                    status: t['status'],
+                  ),
+                );
               }
             }
+          } else {
+            print("⚠️ 'tables' is not Map or List. Got: ${tables.runtimeType}");
           }
         },
       );
@@ -68,13 +96,21 @@ class TableBloc extends Bloc<TableEvent, TableState> {
   }
 
   // ----------------- Load Tables -----------------
-  void _onLoadTables(LoadTables event, Emitter<TableState> emit) {
-    final tables = List.generate(
-      17,
-      (i) => TableModel(id: i + 1, name: "Table ${i + 1}", status: "free"),
-    );
+  final TableRepository _repository = TableRepository();
 
-    emit(state.copyWith(tables: tables, isLoading: false));
+  Future<void> _onLoadTables(LoadTables event, Emitter<TableState> emit) async {
+    try {
+      emit(state.copyWith(isLoading: true));
+
+      final tables = await _repository.fetchTables();
+      
+
+      emit(state.copyWith(tables: tables, isLoading: false));
+    } catch (e) {
+      emit(state.copyWith(isLoading: false));
+      // optionally emit an error state or show snackbar
+      print('Error loading tables: $e');
+    }
   }
 
   // ----------------- Merge Tables -----------------
@@ -88,7 +124,7 @@ class TableBloc extends Bloc<TableEvent, TableState> {
           id: t.id,
           name: t.name,
           status: 'occupied',
-          mergedWith: ids,
+          mergedWith: List<int>.from(ids),
         );
       }
       return t;
@@ -98,7 +134,12 @@ class TableBloc extends Bloc<TableEvent, TableState> {
   }
 
   // ✅ Pusher triggers THIS
-  void _onTableStatusUpdated(TableStatusUpdated event, Emitter<TableState> emit) {
+  void _onTableStatusUpdated(
+    TableStatusUpdated event,
+    Emitter<TableState> emit,
+  ) {
+    print("🔍 Updating table ${event.tableId} to ${event.status}");
+
     final updated = state.tables.map((t) {
       if (t.id == event.tableId) {
         return TableModel(
@@ -132,20 +173,14 @@ class TableBloc extends Bloc<TableEvent, TableState> {
   }
 
   // ----------------- Clear merged -----------------
-  void _onClearMergedTables(
-    ClearMergedTables event, Emitter<TableState> emit) {
+  void _onClearMergedTables(ClearMergedTables event, Emitter<TableState> emit) {
+    final updatedTables = state.tables.map((table) {
+      if (event.tableIds.contains(table.id)) {
+        return table.copyWith(status: "free", mergedWith: []);
+      }
+      return table;
+    }).toList();
 
-  final updatedTables = state.tables.map((table) {
-    if (event.tableIds.contains(table.id)) {
-      return table.copyWith(
-        status: "free",
-        mergedWith: null,
-      );
-    }
-    return table;
-  }).toList();
-
-  emit(state.copyWith(tables: updatedTables));
-}
-
+    emit(state.copyWith(tables: updatedTables));
+  }
 }

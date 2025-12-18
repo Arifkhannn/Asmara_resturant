@@ -7,15 +7,20 @@ class Order {
   final double grandTotal;
   final int orderId; // optional unique id per batch
   final DateTime createdAt; // timestamp
+  bool? isServed;
+  
+
 
   Order({
     required this.tableId,
     required this.tableIds,
     required this.items,
     required this.subtotal,
-    required this.tax,
+     this.tax=0,
     required this.grandTotal,
     this.orderId = 0,
+    bool isServed = false,
+
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -28,6 +33,7 @@ class Order {
     double? grandTotal,
     int? orderId,
     DateTime? createdAt,
+    
   }) {
     return Order(
       tableId: tableId ?? this.tableId,
@@ -38,6 +44,7 @@ class Order {
       grandTotal: grandTotal ?? this.grandTotal,
       orderId: orderId ?? this.orderId,
       createdAt: createdAt ?? this.createdAt,
+      
     );
   }
 
@@ -50,6 +57,7 @@ class Order {
     } else {
       tidList = [];
     }
+   
 
     return Order(
       tableId: tidList.isNotEmpty ? tidList.first : 0,
@@ -57,7 +65,7 @@ class Order {
       items: (json['items'] as List? ?? []).map((e) => OrderItem.fromJson(e)).toList(),
       subtotal: (json['subtotal'] as num? ?? 0).toDouble(),
       tax: (json['tax'] as num? ?? 0).toDouble(),
-      grandTotal: (json['grandTotal'] as num? ?? 0).toDouble(),
+      grandTotal: (json['subtotal'] as num? ?? 0).toDouble(),
       orderId: json['orderId'] ?? 0,
       createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
     );

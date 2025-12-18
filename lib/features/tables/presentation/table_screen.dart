@@ -1,4 +1,5 @@
-
+import 'package:asmara_dine/core/allOrders.dart';
+import 'package:asmara_dine/core/animation/animatedPageRoute.dart';
 import 'package:asmara_dine/features/menu/logic/event_bloc.dart';
 import 'package:asmara_dine/features/menu/logic/event_menu.dart';
 import 'package:asmara_dine/features/menu/presentation/menu_screen.dart';
@@ -8,6 +9,7 @@ import 'package:asmara_dine/features/tables/logic/table_state.dart';
 import 'package:asmara_dine/features/tables/models/table_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:ui';
 
 class TablesPage extends StatefulWidget {
   const TablesPage({super.key});
@@ -50,69 +52,187 @@ class _TablesPageState extends State<TablesPage> {
     return s.join('+');
   }
 
+  Future<void> _onRefresh() async {
+    context.read<TableBloc>().add(LoadTables());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
+      // appBar: AppBar(
+      //   // --- UI Update: Clean, transparent AppBar ---
+      //   backgroundColor: Colors.transparent,
+      //   elevation: 0,
+      //   // --- End UI Update ---
+      //   title: Text(
+      //     _isMergeMode ? 'Merge Tables (${_selected.length})' : 'Tables',
+      //     style: const TextStyle(
+      //       fontWeight: FontWeight.bold,
+      //       fontSize: 20,
+      //       color: Color.fromARGB(255, 255, 255, 255),
+      //       // --- UI Update: Added a subtle shadow to text for readability ---
+      //       shadows: [
+      //         Shadow(
+      //           color: Colors.black26,
+      //           blurRadius: 4,
+      //           offset: Offset(1, 1),
+      //         ),
+      //       ],
+      //     ),
+      //   ),
+      //   actions: [
+      //     IconButton(
+      //       icon: Icon(
+      //         Icons.refresh_outlined,
+      //         color: const Color.fromARGB(255, 255, 255, 254),
+      //         size: 38, // UI Update: Slightly larger icon
+      //       ),
+      //       onPressed: () {
+      //         context.read<TableBloc>().add(LoadTables());
+      //       },
+      //     ),
+      //     IconButton(
+      //       icon: Icon(
+      //         _isMergeMode ? Icons.close : Icons.merge_type,
+      //         color: const Color.fromARGB(255, 255, 255, 255),
+      //         size: 38, // UI Update: Slightly larger icon
+      //       ),
+      //       onPressed: _toggleMergeMode,
+      //     ),
+      //     IconButton(
+      //       icon: const Icon(Icons.list_alt, color: Colors.white),
+      //       onPressed: () {
+      //         Navigator.push(
+      //           context,
+      //           MaterialPageRoute(
+      //             builder: (_) => BlocProvider(
+      //               create: (_) => MenuBloc([])..add(LoadAllOrders()),
+      //               child: const AllOrdersScreen(),
+      //             ),
+      //           ),
+      //         );
+      //       },
+      //     ),
+
+      //     if (_isMergeMode)
+      //       IconButton(
+      //         icon: const Icon(
+      //           Icons.check,
+      //           color: Color.fromARGB(255, 255, 252, 251),
+      //           size: 38, // UI Update: Slightly larger icon
+      //         ),
+      //         onPressed: _selected.isNotEmpty
+      //             ? () {
+      //                 final ids = _selected.toList();
+      //                 context.read<TableBloc>().add(MergeTables(tableIds: ids));
+      //                 setState(() {
+      //                   _mergeMode = false;
+      //                 });
+      //                 Navigator.push(
+      //                   context,
+      //                   MaterialPageRoute(
+      //                     builder: (_) => BlocProvider(
+      //                       create: (_) => MenuBloc(ids),
+      //                       child: MenuScreen.fromTableIds(tableIds: ids),
+      //                     ),
+      //                   ),
+      //                 ).then((_) {
+      //                   setState(() {
+      //                     _selected.clear();
+      //                   });
+      //                 });
+      //               }
+      //             : null,
+      //       ),
+      //   ],
+      // ),
       appBar: AppBar(
-        // --- UI Update: Clean, transparent AppBar ---
-        backgroundColor: Colors.transparent,
+        toolbarHeight: 40,
+        backgroundColor: const Color.fromARGB(0, 255, 249, 249),
         elevation: 0,
-        // --- End UI Update ---
+        flexibleSpace: ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 1, sigmaY: 6),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color.fromARGB(255, 214, 255, 66).withOpacity(0.1),
+                    const Color.fromARGB(255, 252, 253, 252).withOpacity(0.1),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+          ),
+        ),
         title: Text(
           _isMergeMode ? 'Merge Tables (${_selected.length})' : 'Tables',
           style: const TextStyle(
-            fontWeight: FontWeight.bold,
             fontSize: 20,
-            color: Colors.brown,
-            // --- UI Update: Added a subtle shadow to text for readability ---
-            shadows: [
-              Shadow(
-                color: Colors.black26,
-                blurRadius: 4,
-                offset: Offset(1, 1),
-              ),
-            ],
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+            color: Colors.white,
           ),
         ),
         actions: [
-          IconButton(
-            icon: Icon(
-              _isMergeMode ? Icons.close : Icons.merge_type,
-              color: Colors.brown,
-              size: 28, // UI Update: Slightly larger icon
-            ),
-            onPressed: _toggleMergeMode,
+          _AppBarIcon(
+            icon: Icons.refresh_rounded,
+            onTap: () =>
+                context.read<TableBloc>().add(LoadTables()),
+          ),
+          _AppBarIcon(
+            icon: _isMergeMode
+                ? Icons.close_rounded
+                : Icons.merge_type_rounded,
+            onTap: _toggleMergeMode,
+          ),
+          _AppBarIcon(
+            icon: Icons.list_alt_rounded,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider(
+                    create: (_) =>
+                        MenuBloc([])..add(LoadAllOrders()),
+                    child: const AllOrdersScreen(),
+                  ),
+                ),
+              );
+            },
           ),
           if (_isMergeMode)
-            IconButton(
-              icon: const Icon(
-                Icons.check,
-                color: Colors.brown,
-                size: 28, // UI Update: Slightly larger icon
-              ),
-              onPressed: _selected.isNotEmpty
+            _AppBarIcon(
+              icon: Icons.check_circle_rounded,
+              color: Colors.greenAccent,
+              onTap: _selected.isNotEmpty
                   ? () {
                       final ids = _selected.toList();
                       context
                           .read<TableBloc>()
                           .add(MergeTables(tableIds: ids));
-                      setState(() {
-                        _mergeMode = false;
-                      });
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => BlocProvider(
-                            create: (_) => MenuBloc(ids),
-                            child: MenuScreen.fromTableIds(tableIds: ids),
-                          ),
-                        ),
-                      ).then((_) {
-                        setState(() {
-                          _selected.clear();
-                        });
-                      });
+                      setState(() => _mergeMode = false);
+
+                     Navigator.push(
+  context,
+  AnimatedPageRoute(
+    page: BlocProvider(
+      create: (_) => MenuBloc(ids),
+      child: MenuScreen.fromTableIds(
+        tableIds: ids,
+      ),
+    ),
+  ),
+).then((_) {
+  setState(_selected.clear);
+});
+
+
+                 
+
                     }
                   : null,
             ),
@@ -125,10 +245,7 @@ class _TablesPageState extends State<TablesPage> {
               image: DecorationImage(
                 image: AssetImage("assets/asmaraOuter.jpeg"),
                 fit: BoxFit.cover,
-                colorFilter: ColorFilter.mode(
-                  Colors.black12,
-                  BlendMode.darken,
-                ),
+                colorFilter: ColorFilter.mode(Colors.black12, BlendMode.darken),
               ),
             ),
           ),
@@ -136,66 +253,126 @@ class _TablesPageState extends State<TablesPage> {
             child: BlocBuilder<TableBloc, TableState>(
               builder: (context, state) {
                 if (state.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator(
+                    color: Colors.green,
+                  ));
                 }
 
                 final size = MediaQuery.of(context).size;
                 final isTablet = size.width > 600;
-                final crossAxisCount =
-                    isTablet ? (size.width ~/ 200).clamp(3, 6) : 3;
+                final crossAxisCount = isTablet
+                    ? (size.width ~/ 200).clamp(3, 6)
+                    : 3;
 
-                return GridView.builder(
-                  padding: const EdgeInsets.all(16),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: isTablet ? 1.2 : 0.9,
-                  ),
-                  itemCount: state.tables.length,
-                  itemBuilder: (context, index) {
-                    final table = state.tables[index];
-                    final isSelected = _selected.contains(table.id);
-                    final isMerged = table.mergedWith != null &&
-                        table.mergedWith!.isNotEmpty;
-                    final mergedLabel =
-                        isMerged ? _mergedLabel(table.mergedWith!) : null;
+                // return GridView.builder(
+                //   padding: const EdgeInsets.all(16),
+                //   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                //     crossAxisCount: crossAxisCount,
+                //     crossAxisSpacing: 16,
+                //     mainAxisSpacing: 16,
+                //     childAspectRatio: isTablet ? 1.2 : 0.9,
+                //   ),
+                //   itemCount: state.tables.length,
+                //   itemBuilder: (context, index) {
+                //     final table = state.tables[index];
+                //     final isSelected = _selected.contains(table.id);
+                //     final isMerged =
+                //         table.mergedWith != null &&
+                //         table.mergedWith!.isNotEmpty;
+                //     final mergedLabel = isMerged
+                //         ? _mergedLabel(table.mergedWith!)
+                //         : null;
 
-                    return GestureDetector(
-                      onLongPress: () {
-                        setState(() {
-                          _mergeMode = true;
-                          _selectToggle(table.id);
-                        });
-                      },
-                      onTap: () {
-                        if (_isMergeMode) {
-                          _selectToggle(table.id);
-                          return;
-                        }
+                //     return GestureDetector(
+                //       onLongPress: () {
+                //         setState(() {
+                //           _mergeMode = true;
+                //           _selectToggle(table.id);
+                //         });
+                //       },
+                //       onTap: () {
+                //         if (_isMergeMode) {
+                //           _selectToggle(table.id);
+                //           return;
+                //         }
 
-                        final ids = isMerged
-                            ? table.mergedWith!
-                            : [table.id];
+                //         final ids = isMerged ? table.mergedWith! : [table.id];
 
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => BlocProvider(
-                              create: (_) => MenuBloc(ids),
-                              child: MenuScreen.fromTableIds(tableIds: ids),
-                            ),
-                          ),
-                        );
-                      },
-                      child: _TableCard(
-                        table: table,
-                        isSelected: isSelected,
-                        mergedLabel: mergedLabel,
-                      ),
-                    );
-                  },
-                );
+                //         Navigator.push(
+                //           context,
+                //           MaterialPageRoute(
+                //             builder: (_) => BlocProvider(
+                //               create: (_) => MenuBloc(ids),
+                //               child: MenuScreen.fromTableIds(tableIds: ids),
+                //             ),
+                //           ),
+                //         );
+                //       },
+                //       child: _TableCard(
+                //         table: table,
+                //         isSelected: isSelected,
+                //         mergedLabel: mergedLabel,
+                //       ),
+                //     );
+                //   },
+                // );
+                return RefreshIndicator(
+  onRefresh: _onRefresh,
+  color: Colors.green,
+  child: GridView.builder(
+    physics: const AlwaysScrollableScrollPhysics(),
+    padding: const EdgeInsets.all(16),
+    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: crossAxisCount,
+      crossAxisSpacing: 16,
+      mainAxisSpacing: 16,
+      childAspectRatio: isTablet ? 1.2 : 0.9,
+    ),
+    itemCount: state.tables.length,
+    itemBuilder: (context, index) {
+      final table = state.tables[index];
+      final isSelected = _selected.contains(table.id);
+      final isMerged =
+          table.mergedWith != null && table.mergedWith!.isNotEmpty;
+      final mergedLabel =
+          isMerged ? _mergedLabel(table.mergedWith!) : null;
+
+      return GestureDetector(
+        onLongPress: () {
+          setState(() {
+            _mergeMode = true;
+            _selectToggle(table.id);
+          });
+        },
+        onTap: () {
+          if (_isMergeMode) {
+            _selectToggle(table.id);
+            return;
+          }
+
+          final ids = isMerged ? table.mergedWith! : [table.id];
+
+          Navigator.push(
+  context,
+  AnimatedPageRoute(
+    page: BlocProvider(
+      create: (_) => MenuBloc(ids),
+      child: MenuScreen.fromTableIds(tableIds: ids),
+    ),
+  ),
+);
+
+        },
+        child: _TableCard(
+          table: table,
+          isSelected: isSelected,
+          mergedLabel: mergedLabel,
+        ),
+      );
+    },
+  ),
+);
+
               },
             ),
           ),
@@ -273,8 +450,7 @@ class _TableCard extends StatelessWidget {
           Align(
             alignment: Alignment.topRight,
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: statusColor,
                 borderRadius: BorderRadius.circular(12),
@@ -284,7 +460,7 @@ class _TableCard extends StatelessWidget {
                     color: statusColor.withOpacity(0.5),
                     blurRadius: 5,
                     offset: const Offset(0, 2),
-                  )
+                  ),
                 ],
               ),
               child: Text(
@@ -309,8 +485,8 @@ class _TableCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             mergedLabel != null
-                ? '${table.name} ($mergedLabel)'
-                : table.name,
+                ? '${table.id} ($mergedLabel)'
+                : table.id.toString(),
             textAlign: TextAlign.center,
             style: TextStyle(
               color: isSelected ? Colors.white : Colors.black87,
@@ -332,5 +508,25 @@ class _TableCard extends StatelessWidget {
       default:
         return Colors.green;
     }
+  }
+}
+class _AppBarIcon extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onTap;
+  final Color color;
+
+  const _AppBarIcon({
+    required this.icon,
+    this.onTap,
+    this.color = Colors.white,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      splashRadius: 22,
+      icon: Icon(icon, size: 28, color: color),
+      onPressed: onTap,
+    );
   }
 }

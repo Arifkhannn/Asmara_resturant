@@ -24,3 +24,5 @@ class ClearMergedTables extends TableEvent {
   final List<int> tableIds;
   ClearMergedTables({required this.tableIds});
 }
+
+

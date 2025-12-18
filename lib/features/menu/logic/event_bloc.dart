@@ -2,6 +2,7 @@ import 'package:asmara_dine/features/menu/data/menu_api.dart';
 import 'package:asmara_dine/features/menu/logic/event_menu.dart';
 import 'package:asmara_dine/features/menu/logic/event_state.dart';
 import 'package:asmara_dine/features/menu/models/order_model.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MenuBloc extends Bloc<MenuEvent, MenuState> {
@@ -12,28 +13,30 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
   final String _tableKey;
 
   MenuBloc(this.tableIds)
-      : _tableKey = _tableKeyFrom(tableIds),
-        super(
-          _tableStates[_tableKeyFrom(tableIds)] ??
-              MenuState(
-                categories: [],
-                order: Order(
-                  tableId: tableIds.isNotEmpty ? tableIds.first : 0,
-                  tableIds: tableIds,
-                  items: [],
-                  subtotal: 0,
-                  tax: 0,
-                  grandTotal: 0,
-                ),
-                allOrders: [],
-                orderPlaced: false,
+    : _tableKey = _tableKeyFrom(tableIds),
+      super(
+        _tableStates[_tableKeyFrom(tableIds)] ??
+            MenuState(
+              categories: [],
+              order: Order(
+                tableId: tableIds.isNotEmpty ? tableIds.first : 0,
+                tableIds: tableIds,
+                items: [],
+                subtotal: 0,
+                tax: 0,
+                grandTotal: 0,
               ),
-        ) {
+              allOrders: [],
+              orderPlaced: false,
+            ),
+      ) {
     on<LoadMenu>(_onLoadMenu);
     on<AddItemToOrder>(_onAddItem);
     on<RemoveItemFromOrder>(_onRemoveItem);
     on<PlaceOrder>(_onPlaceOrder);
     on<CompleteOrder>(_onCompleteOrder);
+    on<LoadAllOrders>(_onLoadAllOrders);
+    on<LoadExistingOrders>(_onLoadExistingOrder);
   }
 
   static String _tableKeyFrom(List<int> ids) {
@@ -68,17 +71,19 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
         total: updated.total + updated.price,
       );
     } else {
-      items.add(OrderItem(
-        itemId: event.item.itemId,
-        name: event.item.name,
-        quantity: 1,
-        price: event.item.price,
-        total: event.item.price,
-      ));
+      items.add(
+        OrderItem(
+          itemId: event.item.itemId,
+          name: event.item.name,
+          quantity: 1,
+          price: event.item.price,
+          total: event.item.price,
+        ),
+      );
     }
 
     final subtotal = items.fold(0.0, (sum, i) => sum + i.total);
-    final tax = subtotal * 0.1;
+    final tax = subtotal * 0.0;
     final grandTotal = subtotal + tax;
 
     final updatedState = state.copyWith(
@@ -116,7 +121,7 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
     }
 
     final subtotal = items.fold(0.0, (sum, i) => sum + i.total);
-    final tax = subtotal * 0.1;
+    final tax = subtotal * 0.0;
     final grandTotal = subtotal + tax;
 
     final updatedState = state.copyWith(
@@ -135,7 +140,9 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
   // ------------------- Place Order -------------------
   void _onPlaceOrder(PlaceOrder event, Emitter<MenuState> emit) {
     // Save current order batch
-    final newOrderBatch = state.order.copyWith(orderId: DateTime.now().millisecondsSinceEpoch);
+    final newOrderBatch = state.order.copyWith(
+      orderId: DateTime.now().millisecondsSinceEpoch,
+    );
 
     // Append this batch to allOrders
     final updatedAllOrders = [...state.allOrders, newOrderBatch];
@@ -158,6 +165,16 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
 
     _persistState(updatedState);
     emit(updatedState);
+  }
+
+  void _onLoadAllOrders(LoadAllOrders event, Emitter<MenuState> emit) {
+    List<Order> all = [];
+
+    for (var tableState in _tableStates.values) {
+      all.addAll(tableState.allOrders);
+    }
+
+    emit(AllOrdersLoaded(state, all));
   }
 
   // ------------------- Complete Order -------------------
@@ -184,5 +201,35 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
   // ------------------- Helper -------------------
   void _persistState(MenuState newState) {
     _tableStates[_tableKey] = newState;
+  }
+
+  Future<void> _onLoadExistingOrder(
+    LoadExistingOrders event,
+    Emitter<MenuState> emit,
+  ) async {
+    try {
+      final Order? posOrder = await _menuApiService.fetchOrdersForTable(
+        event.tableId,
+      );
+      if (posOrder == null || posOrder.items.isEmpty) {
+      return; 
+    }
+
+      // final newState = state.copyWith(
+      //   allOrders: [if (posOrder != null) posOrder, ...state.allOrders],
+      // );
+  final newState = state.copyWith(
+  allOrders: posOrder != null ? [posOrder] : [],
+);
+
+      
+        _persistState(newState);
+        emit(newState);
+      
+    } catch (e, st) {
+      debugPrint('❌ Failed to load order');
+      debugPrint('$e');
+      debugPrint('$st');
+    }
   }
 }

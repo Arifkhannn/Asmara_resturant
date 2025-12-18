@@ -46,4 +46,18 @@ class MenuState {
     final past = allOrders.fold(0.0, (sum, o) => sum + o.grandTotal);
     return current + past;
   }
+
+  
 }
+class AllOrdersLoaded extends MenuState {
+  final List<Order> orders;
+
+  AllOrdersLoaded(MenuState s, this.orders)
+      : super(
+          categories: s.categories,
+          order: s.order,
+          allOrders: s.allOrders,
+          orderPlaced: s.orderPlaced,
+        );
+}
+
