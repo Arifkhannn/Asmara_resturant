@@ -9,6 +9,7 @@ import 'package:asmara_dine/features/menu/presentation/widgets/menuItem_card.dar
 import 'package:asmara_dine/features/menu/presentation/widgets/order_summary.dart';
 import 'package:asmara_dine/features/menu/presentation/widgets/search_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MenuScreen extends StatefulWidget {
@@ -51,6 +52,7 @@ class _MenuScreenState extends State<MenuScreen> {
 
   /// ✅ Pull-to-refresh handler
   Future<void> _onRefresh() async {
+    HapticFeedback.heavyImpact();
     context.read<MenuBloc>().add(
           LoadExistingOrders(widget.tableIds.first),
         );
@@ -244,11 +246,13 @@ class _MenuScreenState extends State<MenuScreen> {
                         price: item.price,
                         quantity: orderItem.quantity,
                         onAdd: () {
+                          HapticFeedback.mediumImpact();
                           context
                               .read<MenuBloc>()
                               .add(AddItemToOrder(item));
                         },
                         onRemove: () {
+                          HapticFeedback.heavyImpact();
                           context
                               .read<MenuBloc>()
                               .add(RemoveItemFromOrder(item));
@@ -271,6 +275,7 @@ class _MenuScreenState extends State<MenuScreen> {
             itemCount: state.order.items.length,
             total: state.order.grandTotal,
             onReviewTap: () {
+              HapticFeedback.vibrate();
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => BlocProvider.value(
@@ -296,6 +301,7 @@ class _MenuScreenState extends State<MenuScreen> {
               style: TextStyle(color: Colors.white),
             ),
             onPressed: () {
+              HapticFeedback.heavyImpact();
               Navigator.of(context).push(
   AnimatedPageRoute(
     page: BlocProvider.value(
