@@ -828,7 +828,7 @@ class _OrderBottomBar extends StatelessWidget {
     // // Future.delayed(const Duration(milliseconds: 50), () {
     // //   HapticFeedback.heavyImpact();
     // });
-   
+
     // 🎆 Firecracker animation
     showDialog(
       context: context,
@@ -849,7 +849,6 @@ class _OrderBottomBar extends StatelessWidget {
       Navigator.of(context, rootNavigator: true).pop();
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -942,17 +941,14 @@ class _OrderBottomBar extends StatelessWidget {
                   //                   debugPrint(
                   //                     '----------------------------------------------------${response.body}',
                   //                   );
-
                   //                   // extracting the orderid from the api response of the create order
                   //                   final data = jsonDecode(response.body);
                   //                   final orderid = data["order"];
-
                   //                   final existingId = OrderMemory.instance
                   //                       .getForMergedTables(tableIds);
                   //                   debugPrint(
                   //                     "🔥 Before Saving → Existing OrderID for tables $tableIds = $existingId",
                   //                   );
-
                   //                   if (existingId == null) {
                   //                     debugPrint(
                   //                       "✅ No orderId found, saving new orderId → $orderid",
@@ -962,14 +958,12 @@ class _OrderBottomBar extends StatelessWidget {
                   //                       orderid,
                   //                     );
                   //                   }
-
                   //                   // 🔥 Re-fetch to confirm save
                   //                   final updatedId = OrderMemory.instance
                   //                       .getForMergedTables(tableIds);
                   //                   debugPrint(
                   //                     "🔥 After Saving → Stored OrderID for tables $tableIds = $updatedId",
                   //                   );
-
                   //                   Navigator.pop(context);
                   //                   ScaffoldMessenger.of(context).showSnackBar(
                   //                     const SnackBar(
@@ -1028,384 +1022,419 @@ class _OrderBottomBar extends StatelessWidget {
                   // ),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-    backgroundColor: Colors.green.shade700,
-    foregroundColor: Colors.white,
-    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(10),
-    ),
-  ),
-   child: const Text(
-    'Place Order',
-    style: TextStyle(
-      fontWeight: FontWeight.w700,
-      fontSize: 16,
-    ),
-  ),
-  onPressed: () async {
-//     await showDialog(
-//       context: context,
-//       builder: (_) => AlertDialog(
-//         title: const Text('Place Order'),
-//         content: Text(
-//           'Confirm new order?\n'
-//           'Items: ${state.order.items.length}\n'
-//           'Total: €${state.order.grandTotal.toStringAsFixed(2)}\n\n'
-//           'Note: ${noteController.text.isEmpty ? "None" : noteController.text}\n'
-//           'Taste: ${spicyPreference ?? "None"}',
-//         ),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(context),
-//             child: const Text(
-//               'Cancel',
-//               style: TextStyle(color: Colors.red),
-//             ),
-//           ),
-//           ElevatedButton(
-//             onPressed: () async {
-//               final tableIds = state.order.tableIds;
-//               final orderItems = state.order.items
-//                   .map(
-//                     (item) => {
-//                       "id": item.itemId,
-//                       "qty": item.quantity,
-//                       "itemName": item.name,
-//                     },
-//                   )
-//                   .toList();
-
-//               final body = jsonEncode({
-//                 "tableIds": tableIds,
-//                 "orderItems": orderItems,
-//                 "note": noteController.text,
-//                 "tastes": spicyPreference,
-//                 "order":
-//                     OrderMemory.instance.getForMergedTables(tableIds),
-//               });
-
-//               try {
-//                 final response = await http.post(
-//                   Uri.parse(
-//                     'https://asmara-eindhoven.nl/api/orders/create',
-//                   ),
-//                   headers: {
-//                     'Accept': 'application/json',
-//                     'Content-Type': 'application/json',
-//                   },
-//                   body: body,
-//                 );
-
-//                 if (response.statusCode == 200) {
-//                   // 1️⃣ Close dialog
-//                   Navigator.pop(context);
-
-//                   // 2️⃣ Firecracker + vibration
-//                   showFirecrackerWithHaptics(context);
-
-//                   // 3️⃣ Business logic (UNCHANGED)
-//                   context.read<MenuBloc>().add(PlaceOrder());
-
-//                   for (final tid in tableIds) {
-//                     context.read<TableBloc>().add(
-//                       TableStatusUpdated(
-//                         tableId: tid,
-//                         status: "occupied",
-//                       ),
-//                     );
-//                   }
-
-//                   final data = jsonDecode(response.body);
-//                   final orderId = data["order"];
-
-//                   final existingId =
-//                       OrderMemory.instance.getForMergedTables(tableIds);
-
-//                   if (existingId == null) {
-//                     await OrderMemory.instance.saveForTables(
-//                       tableIds,
-//                       orderId,
-//                     );
-//                   }
-
-//                   // 4️⃣ Snackbar AFTER animation
-//                   // Future.delayed(const Duration(seconds: 2), () {
-//                   //   ScaffoldMessenger.of(context).showSnackBar(
-//                   //     const SnackBar(
-//                   //       content:
-//                   //           Text('Order placed successfully 🎉'),
-//                   //     ),
-//                   //   );
-//                   // });
-//                 } else {
-//                   Navigator.pop(context);
-//                   ScaffoldMessenger.of(context).showSnackBar(
-//                     const SnackBar(
-//                       content:
-//                           Text('😢 API error. Please try again.'),
-//                     ),
-//                   );
-//                 }
-//               } catch (e) {
-//                 Navigator.pop(context);
-//                 ScaffoldMessenger.of(context).showSnackBar(
-//                   const SnackBar(
-//                     content:
-//                         Text('😢 Something went wrong. Try again.'),
-//                   ),
-//                 );
-//               }
-//             },
-//             child: const Text(
-//               'Confirm',
-//               style: TextStyle(
-//                 color: Colors.green,
-//                 fontWeight: FontWeight.w600,
-//               ),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   },
-//   style: ElevatedButton.styleFrom(
-//     backgroundColor: Colors.green.shade700,
-//     foregroundColor: Colors.white,
-//     padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-//     shape: RoundedRectangleBorder(
-//       borderRadius: BorderRadius.circular(10),
-//     ),
-//   ),
-//   child: const Text('Place Order'),
-// ),
-
-await showDialog(
-  context: context,
-  barrierDismissible: false,
-  builder: (_) {
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ===== HEADER =====
-            Row(
-              children: const [
-                Icon(Icons.receipt_long_rounded,
-                    color: Colors.green, size: 26),
-                SizedBox(width: 8),
-                Text(
-                  "Confirm Order",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 14),
-            const Divider(),
-
-            // ===== ORDER SUMMARY =====
-            _DialogRow(
-              label: "Items",
-              value: "${state.order.items.length}",
-            ),
-
-            _DialogRow(
-              label: "Taste",
-              value: spicyPreference ?? "None",
-            ),
-
-            _DialogRow(
-              label: "Note",
-              value: noteController.text.isEmpty
-                  ? "None"
-                  : noteController.text,
-            ),
-
-            const SizedBox(height: 12),
-
-            // ===== TOTAL =====
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Total Amount",
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    "€${state.order.grandTotal.toStringAsFixed(2)}",
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.green,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // ===== ACTION BUTTONS =====
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      side: const BorderSide(color: Colors.red),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      backgroundColor: Colors.green.shade700,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 22,
+                        vertical: 14,
+                      ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                     child: const Text(
-                      "Cancel",
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green.shade700,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      'Place Order',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
                       ),
                     ),
                     onPressed: () async {
-                      final tableIds = state.order.tableIds;
-                      final orderItems = state.order.items
-                          .map(
-                            (item) => {
-                              "id": item.itemId,
-                              "qty": item.quantity,
-                              "itemName": item.name,
-                            },
-                          )
-                          .toList();
+                      //     await showDialog(
+                      //       context: context,
+                      //       builder: (_) => AlertDialog(
+                      //         title: const Text('Place Order'),
+                      //         content: Text(
+                      //           'Confirm new order?\n'
+                      //           'Items: ${state.order.items.length}\n'
+                      //           'Total: €${state.order.grandTotal.toStringAsFixed(2)}\n\n'
+                      //           'Note: ${noteController.text.isEmpty ? "None" : noteController.text}\n'
+                      //           'Taste: ${spicyPreference ?? "None"}',
+                      //         ),
+                      //         actions: [
+                      //           TextButton(
+                      //             onPressed: () => Navigator.pop(context),
+                      //             child: const Text(
+                      //               'Cancel',
+                      //               style: TextStyle(color: Colors.red),
+                      //             ),
+                      //           ),
+                      //           ElevatedButton(
+                      //             onPressed: () async {
+                      //               final tableIds = state.order.tableIds;
+                      //               final orderItems = state.order.items
+                      //                   .map(
+                      //                     (item) => {
+                      //                       "id": item.itemId,
+                      //                       "qty": item.quantity,
+                      //                       "itemName": item.name,
+                      //                     },
+                      //                   )
+                      //                   .toList();
 
-                      final body = jsonEncode({
-                        "tableIds": tableIds,
-                        "orderItems": orderItems,
-                        "note": noteController.text,
-                        "tastes": spicyPreference,
-                        "order": OrderMemory.instance
-                            .getForMergedTables(tableIds),
-                      });
+                      //               final body = jsonEncode({
+                      //                 "tableIds": tableIds,
+                      //                 "orderItems": orderItems,
+                      //                 "note": noteController.text,
+                      //                 "tastes": spicyPreference,
+                      //                 "order":
+                      //                     OrderMemory.instance.getForMergedTables(tableIds),
+                      //               });
 
-                      try {
-                        final response = await http.post(
-                          Uri.parse(
-                            'https://asmara-eindhoven.nl/api/orders/create',
-                          ),
-                          headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                          },
-                          body: body,
-                        );
+                      //               try {
+                      //                 final response = await http.post(
+                      //                   Uri.parse(
+                      //                     'https://asmara-eindhoven.nl/api/orders/create',
+                      //                   ),
+                      //                   headers: {
+                      //                     'Accept': 'application/json',
+                      //                     'Content-Type': 'application/json',
+                      //                   },
+                      //                   body: body,
+                      //                 );
 
-                        if (response.statusCode == 200) {
-                          Navigator.pop(context);
+                      //                 if (response.statusCode == 200) {
+                      //                   // 1️⃣ Close dialog
+                      //                   Navigator.pop(context);
 
-                          // 🔥 Firecracker + Haptics
-                          showFirecrackerWithHaptics(context);
+                      //                   // 2️⃣ Firecracker + vibration
+                      //                   showFirecrackerWithHaptics(context);
 
-                          // 🔁 Existing logic (UNCHANGED)
-                          context.read<MenuBloc>().add(PlaceOrder());
+                      //                   // 3️⃣ Business logic (UNCHANGED)
+                      //                   context.read<MenuBloc>().add(PlaceOrder());
 
-                          for (final tid in tableIds) {
-                            context.read<TableBloc>().add(
-                                  TableStatusUpdated(
-                                    tableId: tid,
-                                    status: "occupied",
+                      //                   for (final tid in tableIds) {
+                      //                     context.read<TableBloc>().add(
+                      //                       TableStatusUpdated(
+                      //                         tableId: tid,
+                      //                         status: "occupied",
+                      //                       ),
+                      //                     );
+                      //                   }
+
+                      //                   final data = jsonDecode(response.body);
+                      //                   final orderId = data["order"];
+
+                      //                   final existingId =
+                      //                       OrderMemory.instance.getForMergedTables(tableIds);
+
+                      //                   if (existingId == null) {
+                      //                     await OrderMemory.instance.saveForTables(
+                      //                       tableIds,
+                      //                       orderId,
+                      //                     );
+                      //                   }
+
+                      //                   // 4️⃣ Snackbar AFTER animation
+                      //                   // Future.delayed(const Duration(seconds: 2), () {
+                      //                   //   ScaffoldMessenger.of(context).showSnackBar(
+                      //                   //     const SnackBar(
+                      //                   //       content:
+                      //                   //           Text('Order placed successfully 🎉'),
+                      //                   //     ),
+                      //                   //   );
+                      //                   // });
+                      //                 } else {
+                      //                   Navigator.pop(context);
+                      //                   ScaffoldMessenger.of(context).showSnackBar(
+                      //                     const SnackBar(
+                      //                       content:
+                      //                           Text('😢 API error. Please try again.'),
+                      //                     ),
+                      //                   );
+                      //                 }
+                      //               } catch (e) {
+                      //                 Navigator.pop(context);
+                      //                 ScaffoldMessenger.of(context).showSnackBar(
+                      //                   const SnackBar(
+                      //                     content:
+                      //                         Text('😢 Something went wrong. Try again.'),
+                      //                   ),
+                      //                 );
+                      //               }
+                      //             },
+                      //             child: const Text(
+                      //               'Confirm',
+                      //               style: TextStyle(
+                      //                 color: Colors.green,
+                      //                 fontWeight: FontWeight.w600,
+                      //               ),
+                      //             ),
+                      //           ),
+                      //         ],
+                      //       ),
+                      //     );
+                      //   },
+                      //   style: ElevatedButton.styleFrom(
+                      //     backgroundColor: Colors.green.shade700,
+                      //     foregroundColor: Colors.white,
+                      //     padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+                      //     shape: RoundedRectangleBorder(
+                      //       borderRadius: BorderRadius.circular(10),
+                      //     ),
+                      //   ),
+                      //   child: const Text('Place Order'),
+                      // ),
+
+                      await showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (_) {
+                          return Dialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            insetPadding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(18),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // ===== HEADER =====
+                                  Row(
+                                    children: const [
+                                      Icon(
+                                        Icons.receipt_long_rounded,
+                                        color: Colors.green,
+                                        size: 26,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        "Confirm Order",
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                );
-                          }
 
-                          final data = jsonDecode(response.body);
-                          final orderId = data["order"];
+                                  const SizedBox(height: 14),
+                                  const Divider(),
 
-                          final existingId =
-                              OrderMemory.instance.getForMergedTables(
-                            tableIds,
-                          );
+                                  // ===== ORDER SUMMARY =====
+                                  _DialogRow(
+                                    label: "Items",
+                                    value: "${state.order.items.length}",
+                                  ),
 
-                          if (existingId == null) {
-                            await OrderMemory.instance.saveForTables(
-                              tableIds,
-                              orderId,
-                            );
-                          }
-                        } else {
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                '😢 API error. Please try again.',
+                                  _DialogRow(
+                                    label: "Taste",
+                                    value: spicyPreference ?? "None",
+                                  ),
+
+                                  _DialogRow(
+                                    label: "Note",
+                                    value: noteController.text.isEmpty
+                                        ? "None"
+                                        : noteController.text,
+                                  ),
+
+                                  const SizedBox(height: 12),
+
+                                  // ===== TOTAL =====
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.withOpacity(0.08),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          "Total Amount",
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        Text(
+                                          "€${state.order.grandTotal.toStringAsFixed(2)}",
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w800,
+                                            color: Colors.green,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 20),
+
+                                  // ===== ACTION BUTTONS =====
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: OutlinedButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context),
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: Colors.red,
+                                            side: const BorderSide(
+                                              color: Colors.red,
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 14,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            "Cancel",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                Colors.green.shade700,
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 14,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                          onPressed: () async {
+                                            final tableIds =
+                                                state.order.tableIds;
+                                            final orderItems = state.order.items
+                                                .map(
+                                                  (item) => {
+                                                    "id": item.itemId,
+                                                    "qty": item.quantity,
+                                                    "itemName": item.name,
+                                                  },
+                                                )
+                                                .toList();
+
+                                            final body = jsonEncode({
+                                              "tableIds": tableIds,
+                                              "orderItems": orderItems,
+                                              "note": noteController.text,
+                                              "tastes": spicyPreference,
+                                              "order": OrderMemory.instance
+                                                  .getForMergedTables(tableIds),
+                                            });
+
+                                            try {
+                                              final response = await http.post(
+                                                Uri.parse(
+                                                  'https://asmara-eindhoven.nl/api/orders/create',
+                                                ),
+                                                headers: {
+                                                  'Accept': 'application/json',
+                                                  'Content-Type':
+                                                      'application/json',
+                                                },
+                                                body: body,
+                                              );
+
+                                              if (response.statusCode == 200) {
+                                                Navigator.pop(context);
+
+                                                // 🔥 Firecracker + Haptics
+                                                showFirecrackerWithHaptics(
+                                                  context,
+                                                );
+
+                                                // 🔁 Existing logic (UNCHANGED)
+                                                context.read<MenuBloc>().add(
+                                                  PlaceOrder(),
+                                                );
+
+                                                for (final tid in tableIds) {
+                                                  context.read<TableBloc>().add(
+                                                    TableStatusUpdated(
+                                                      tableId: tid,
+                                                      status: "occupied",
+                                                    ),
+                                                  );
+                                                }
+                                                print(response.body);
+                                                final data = jsonDecode(
+                                                  response.body,
+                                                );
+                                                final orderId = data["order"];
+                                                print(
+                                                  '------+++++---------+++++++ order id----------------------${orderId}',
+                                                );
+
+                                                final existingId = OrderMemory
+                                                    .instance
+                                                    .getForMergedTables(
+                                                      tableIds,
+                                                    );
+
+                                                if (existingId == null) {
+                                                  await OrderMemory.instance
+                                                      .saveForTables(
+                                                        tableIds,
+                                                        orderId,
+                                                      );
+                                                }
+                                              } else {
+                                                Navigator.pop(context);
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text(
+                                                      '😢 API error. Please try again.',
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+                                            } catch (e) {
+                                              Navigator.pop(context);
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                const SnackBar(
+                                                  content: Text(
+                                                    '😢 Something went wrong. Try again.',
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                          },
+                                          child: const Text(
+                                            "Confirm Order",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
                           );
-                        }
-                      } catch (e) {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              '😢 Something went wrong. Try again.',
-                            ),
-                          ),
-                        );
-                      }
+                        },
+                      );
                     },
-                    child: const Text(
-                      "Confirm Order",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    
                   ),
-                ),
-                
               ],
-            ),
-          ],
-        ),
-      ),
-    );
-    
-  },
-  
-  
-);
-
-
-       } ) ]
             ),
           ),
         );
@@ -1461,14 +1490,12 @@ class _EmptyOrder extends StatelessWidget {
     );
   }
 }
+
 class _DialogRow extends StatelessWidget {
   final String label;
   final String value;
 
-  const _DialogRow({
-    required this.label,
-    required this.value,
-  });
+  const _DialogRow({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -1492,10 +1519,7 @@ class _DialogRow extends StatelessWidget {
             flex: 5,
             child: Text(
               value,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
           ),
         ],

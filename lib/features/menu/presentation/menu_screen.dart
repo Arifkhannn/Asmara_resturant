@@ -14,10 +14,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MenuScreen extends StatefulWidget {
   final List<int> tableIds;
-  const MenuScreen({super.key, required this.tableIds});
+  final List<String> tableName;
+  const MenuScreen({super.key, required this.tableIds, required this.tableName});
 
-  factory MenuScreen.fromTableIds({required List<int> tableIds}) {
-    return MenuScreen(tableIds: tableIds);
+  factory MenuScreen.fromTableIds({required List<int> tableIds, required List<String> tableName}) {
+    return MenuScreen(tableIds: tableIds, tableName: tableName,);
   }
 
   @override
@@ -30,7 +31,7 @@ class _MenuScreenState extends State<MenuScreen> {
   String searchText = "";
 
   String get _appBarLabel {
-    final sorted = [...widget.tableIds]..sort();
+    final sorted = [...widget.tableName]..sort();
     return sorted.join('+');
   }
 
@@ -58,7 +59,7 @@ class _MenuScreenState extends State<MenuScreen> {
         );
     context.read<MenuBloc>().add(LoadMenu());
 
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 200));
   }
 
   @override
@@ -301,7 +302,7 @@ class _MenuScreenState extends State<MenuScreen> {
               style: TextStyle(color: Colors.white),
             ),
             onPressed: () {
-              HapticFeedback.heavyImpact();
+              
               Navigator.of(context).push(
   AnimatedPageRoute(
     page: BlocProvider.value(

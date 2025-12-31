@@ -122,7 +122,7 @@ class TableBloc extends Bloc<TableEvent, TableState> {
       if (ids.contains(t.id)) {
         return TableModel(
           id: t.id,
-          name: t.name,
+          tableNumber: t.tableNumber,
           status: 'occupied',
           mergedWith: List<int>.from(ids),
         );
@@ -144,7 +144,7 @@ class TableBloc extends Bloc<TableEvent, TableState> {
       if (t.id == event.tableId) {
         return TableModel(
           id: t.id,
-          name: t.name,
+          tableNumber: t.tableNumber,
           status: event.status,
           mergedWith: t.mergedWith,
         );
@@ -161,7 +161,7 @@ class TableBloc extends Bloc<TableEvent, TableState> {
       if (event.tableIds.contains(t.id)) {
         return TableModel(
           id: t.id,
-          name: "Table ${t.id}",
+          tableNumber: "Table ${t.id}",
           status: "free",
           mergedWith: [],
         );

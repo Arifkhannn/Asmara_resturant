@@ -43,19 +43,23 @@ class MenuApiService {
   Future<Order?> fetchOrdersForTable(int tableId) async {
     final baseUrl = 'https://asmara-eindhoven.nl/api/tables';
     final response = await http.get(Uri.parse('$baseUrl/detail/$tableId'));
+    print(
+      'exesting order of ${tableId} coming  from the pos--------${response.body} ',
+    );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      final orderId = data['order'] as String;
+      final orderId = data['order'] ?? '';
       final tableIds = (data['tableIds'] as List)
           .map((e) => (e as num).toInt())
           .toList();
 
       OrderMemory.instance.saveForTables(tableIds, orderId);
-      print(response.body);
+      print(
+        'api response of ongoing order--------------------------------------@@@@@@@@@@@@@@@@@@@@@@@@@@@@f ${response.body}',
+      );
 
       return Order.fromJson(data);
-      
     } else {
       throw Exception("Failed to load table orders");
     }

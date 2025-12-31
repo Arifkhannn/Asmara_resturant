@@ -39,16 +39,13 @@ class _TablesPageState extends State<TablesPage> {
 
   void _selectToggle(int id) {
     setState(() {
-      if (_selected.contains(id)) {
-        _selected.remove(id);
-      } else {
-        _selected.add(id);
-      }
+      _selected.contains(id) ? _selected.remove(id) : _selected.add(id);
     });
   }
 
-  String _mergedLabel(List<int> ids) {
-    final s = [...ids]..sort();
+  /// builds "02+04+07"
+  String _mergedLabel(List<String> tableNumbers) {
+    final s = [...tableNumbers]..sort();
     return s.join('+');
   }
 
@@ -60,203 +57,23 @@ class _TablesPageState extends State<TablesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      // appBar: AppBar(
-      //   // --- UI Update: Clean, transparent AppBar ---
-      //   backgroundColor: Colors.transparent,
-      //   elevation: 0,
-      //   // --- End UI Update ---
-      //   title: Text(
-      //     _isMergeMode ? 'Merge Tables (${_selected.length})' : 'Tables',
-      //     style: const TextStyle(
-      //       fontWeight: FontWeight.bold,
-      //       fontSize: 20,
-      //       color: Color.fromARGB(255, 255, 255, 255),
-      //       // --- UI Update: Added a subtle shadow to text for readability ---
-      //       shadows: [
-      //         Shadow(
-      //           color: Colors.black26,
-      //           blurRadius: 4,
-      //           offset: Offset(1, 1),
-      //         ),
-      //       ],
-      //     ),
-      //   ),
-      //   actions: [
-      //     IconButton(
-      //       icon: Icon(
-      //         Icons.refresh_outlined,
-      //         color: const Color.fromARGB(255, 255, 255, 254),
-      //         size: 38, // UI Update: Slightly larger icon
-      //       ),
-      //       onPressed: () {
-      //         context.read<TableBloc>().add(LoadTables());
-      //       },
-      //     ),
-      //     IconButton(
-      //       icon: Icon(
-      //         _isMergeMode ? Icons.close : Icons.merge_type,
-      //         color: const Color.fromARGB(255, 255, 255, 255),
-      //         size: 38, // UI Update: Slightly larger icon
-      //       ),
-      //       onPressed: _toggleMergeMode,
-      //     ),
-      //     IconButton(
-      //       icon: const Icon(Icons.list_alt, color: Colors.white),
-      //       onPressed: () {
-      //         Navigator.push(
-      //           context,
-      //           MaterialPageRoute(
-      //             builder: (_) => BlocProvider(
-      //               create: (_) => MenuBloc([])..add(LoadAllOrders()),
-      //               child: const AllOrdersScreen(),
-      //             ),
-      //           ),
-      //         );
-      //       },
-      //     ),
-
-      //     if (_isMergeMode)
-      //       IconButton(
-      //         icon: const Icon(
-      //           Icons.check,
-      //           color: Color.fromARGB(255, 255, 252, 251),
-      //           size: 38, // UI Update: Slightly larger icon
-      //         ),
-      //         onPressed: _selected.isNotEmpty
-      //             ? () {
-      //                 final ids = _selected.toList();
-      //                 context.read<TableBloc>().add(MergeTables(tableIds: ids));
-      //                 setState(() {
-      //                   _mergeMode = false;
-      //                 });
-      //                 Navigator.push(
-      //                   context,
-      //                   MaterialPageRoute(
-      //                     builder: (_) => BlocProvider(
-      //                       create: (_) => MenuBloc(ids),
-      //                       child: MenuScreen.fromTableIds(tableIds: ids),
-      //                     ),
-      //                   ),
-      //                 ).then((_) {
-      //                   setState(() {
-      //                     _selected.clear();
-      //                   });
-      //                 });
-      //               }
-      //             : null,
-      //       ),
-      //   ],
-      // ),
-      appBar: AppBar(
-        toolbarHeight: 40,
-        backgroundColor: const Color.fromARGB(0, 255, 249, 249),
-        elevation: 0,
-        flexibleSpace: ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 1, sigmaY: 6),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    const Color.fromARGB(255, 214, 255, 66).withOpacity(0.1),
-                    const Color.fromARGB(255, 252, 253, 252).withOpacity(0.1),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
-            ),
-          ),
-        ),
-        title: Text(
-          _isMergeMode ? 'Merge Tables (${_selected.length})' : 'Tables',
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.5,
-            color: Colors.white,
-          ),
-        ),
-        actions: [
-          _AppBarIcon(
-            icon: Icons.refresh_rounded,
-            onTap: () =>
-                context.read<TableBloc>().add(LoadTables()),
-          ),
-          _AppBarIcon(
-            icon: _isMergeMode
-                ? Icons.close_rounded
-                : Icons.merge_type_rounded,
-            onTap: _toggleMergeMode,
-          ),
-          _AppBarIcon(
-            icon: Icons.list_alt_rounded,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => BlocProvider(
-                    create: (_) =>
-                        MenuBloc([])..add(LoadAllOrders()),
-                    child: const AllOrdersScreen(),
-                  ),
-                ),
-              );
-            },
-          ),
-          if (_isMergeMode)
-            _AppBarIcon(
-              icon: Icons.check_circle_rounded,
-              color: Colors.greenAccent,
-              onTap: _selected.isNotEmpty
-                  ? () {
-                      final ids = _selected.toList();
-                      context
-                          .read<TableBloc>()
-                          .add(MergeTables(tableIds: ids));
-                      setState(() => _mergeMode = false);
-
-                     Navigator.push(
-  context,
-  AnimatedPageRoute(
-    page: BlocProvider(
-      create: (_) => MenuBloc(ids),
-      child: MenuScreen.fromTableIds(
-        tableIds: ids,
-      ),
-    ),
-  ),
-).then((_) {
-  setState(_selected.clear);
-});
-
-
-                 
-
-                    }
-                  : null,
-            ),
-        ],
-      ),
+      appBar: _buildAppBar(),
       body: Stack(
         children: [
-          Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage("assets/asmaraOuter.jpeg"),
-                fit: BoxFit.cover,
-                colorFilter: ColorFilter.mode(Colors.black12, BlendMode.darken),
-              ),
-            ),
-          ),
+          _buildBackground(),
           SafeArea(
             child: BlocBuilder<TableBloc, TableState>(
               builder: (context, state) {
                 if (state.isLoading) {
-                  return const Center(child: CircularProgressIndicator(
-                    color: Colors.green,
-                  ));
+                  return const Center(
+                    child: CircularProgressIndicator(color: Colors.green),
+                  );
                 }
+
+                /// ID → tableNumber map (KEY FIX)
+                final Map<int, String> idToTableNumber = {
+                  for (final t in state.tables) t.id: t.tableNumber,
+                };
 
                 final size = MediaQuery.of(context).size;
                 final isTablet = size.width > 600;
@@ -264,115 +81,78 @@ class _TablesPageState extends State<TablesPage> {
                     ? (size.width ~/ 200).clamp(3, 6)
                     : 3;
 
-                // return GridView.builder(
-                //   padding: const EdgeInsets.all(16),
-                //   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                //     crossAxisCount: crossAxisCount,
-                //     crossAxisSpacing: 16,
-                //     mainAxisSpacing: 16,
-                //     childAspectRatio: isTablet ? 1.2 : 0.9,
-                //   ),
-                //   itemCount: state.tables.length,
-                //   itemBuilder: (context, index) {
-                //     final table = state.tables[index];
-                //     final isSelected = _selected.contains(table.id);
-                //     final isMerged =
-                //         table.mergedWith != null &&
-                //         table.mergedWith!.isNotEmpty;
-                //     final mergedLabel = isMerged
-                //         ? _mergedLabel(table.mergedWith!)
-                //         : null;
-
-                //     return GestureDetector(
-                //       onLongPress: () {
-                //         setState(() {
-                //           _mergeMode = true;
-                //           _selectToggle(table.id);
-                //         });
-                //       },
-                //       onTap: () {
-                //         if (_isMergeMode) {
-                //           _selectToggle(table.id);
-                //           return;
-                //         }
-
-                //         final ids = isMerged ? table.mergedWith! : [table.id];
-
-                //         Navigator.push(
-                //           context,
-                //           MaterialPageRoute(
-                //             builder: (_) => BlocProvider(
-                //               create: (_) => MenuBloc(ids),
-                //               child: MenuScreen.fromTableIds(tableIds: ids),
-                //             ),
-                //           ),
-                //         );
-                //       },
-                //       child: _TableCard(
-                //         table: table,
-                //         isSelected: isSelected,
-                //         mergedLabel: mergedLabel,
-                //       ),
-                //     );
-                //   },
-                // );
                 return RefreshIndicator(
-  onRefresh: _onRefresh,
-  color: Colors.green,
-  child: GridView.builder(
-    physics: const AlwaysScrollableScrollPhysics(),
-    padding: const EdgeInsets.all(16),
-    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-      crossAxisCount: crossAxisCount,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: isTablet ? 1.2 : 0.9,
-    ),
-    itemCount: state.tables.length,
-    itemBuilder: (context, index) {
-      final table = state.tables[index];
-      final isSelected = _selected.contains(table.id);
-      final isMerged =
-          table.mergedWith != null && table.mergedWith!.isNotEmpty;
-      final mergedLabel =
-          isMerged ? _mergedLabel(table.mergedWith!) : null;
+                  onRefresh: _onRefresh,
+                  color: Colors.green,
+                  child: GridView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: isTablet ? 1.2 : 0.9,
+                    ),
+                    itemCount: state.tables.length,
+                    itemBuilder: (context, index) {
+                      final table = state.tables[index];
+                      final isSelected = _selected.contains(table.id);
+                      final isMerged =
+                          table.mergedWith != null &&
+                          table.mergedWith!.length > 1;
 
-      return GestureDetector(
-        onLongPress: () {
-          setState(() {
-            _mergeMode = true;
-            _selectToggle(table.id);
-          });
-        },
-        onTap: () {
-          if (_isMergeMode) {
-            _selectToggle(table.id);
-            return;
-          }
+                      /// 🔑 merged TABLE NUMBERS (not IDs)
+                      final mergedLabel = isMerged
+                          ? _mergedLabel(
+                              table.mergedWith!
+                                  .map(
+                                    (id) =>
+                                        idToTableNumber[id] ?? id.toString(),
+                                  )
+                                  .toList(),
+                            )
+                          : null;
 
-          final ids = isMerged ? table.mergedWith! : [table.id];
+                      return GestureDetector(
+                        onLongPress: () {
+                          setState(() {
+                            _mergeMode = true;
+                            _selectToggle(table.id);
+                          });
+                        },
+                        onTap: () {
+                          if (_isMergeMode) {
+                            _selectToggle(table.id);
+                            return;
+                          }
 
-          Navigator.push(
-  context,
-  AnimatedPageRoute(
-    page: BlocProvider(
-      create: (_) => MenuBloc(ids),
-      child: MenuScreen.fromTableIds(tableIds: ids),
-    ),
-  ),
-);
+                          final ids = isMerged ? table.mergedWith! : [table.id];
+                          final tableNumbers = ids
+                              .map((id) => idToTableNumber[id] ?? id.toString())
+                              .toList();
 
-        },
-        child: _TableCard(
-          table: table,
-          isSelected: isSelected,
-          mergedLabel: mergedLabel,
-        ),
-      );
-    },
-  ),
-);
-
+                          Navigator.push(
+                            context,
+                            AnimatedPageRoute(
+                              page: BlocProvider(
+                                create: (_) => MenuBloc(ids),
+                                child: MenuScreen.fromTableIds(
+                                  tableIds: ids,
+                                  tableName: tableNumbers,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                        child: _TableCard(
+                          table: table,
+                          isSelected: isSelected,
+                          mergedLabel: mergedLabel,
+                        ),
+                      );
+                    },
+                  ),
+                );
               },
             ),
           ),
@@ -380,9 +160,170 @@ class _TablesPageState extends State<TablesPage> {
       ),
     );
   }
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      toolbarHeight: 40,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      flexibleSpace: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 1, sigmaY: 6),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color.fromARGB(255, 214, 255, 66).withOpacity(0.1),
+                  const Color.fromARGB(255, 252, 253, 252).withOpacity(0.1),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+      title: Text(
+        _isMergeMode ? 'Merge Tables (${_selected.length})' : 'Tables',
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
+          color: Colors.white,
+        ),
+      ),
+      actions: [
+        _AppBarIcon(
+          icon: Icons.refresh_rounded,
+          onTap: () => context.read<TableBloc>().add(LoadTables()),
+        ),
+        _AppBarIcon(
+          icon: _isMergeMode ? Icons.close_rounded : Icons.merge_type_rounded,
+          onTap: _toggleMergeMode,
+        ),
+        _AppBarIcon(
+          icon: Icons.list_alt_rounded,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => BlocProvider(
+                  create: (_) => MenuBloc([])..add(LoadAllOrders()),
+                  child: const AllOrdersScreen(),
+                ),
+              ),
+            );
+          },
+        ),
+
+        /// ✅ MERGE CONFIRM (FIXED)
+      if (_isMergeMode)
+  BlocBuilder<TableBloc, TableState>(
+    buildWhen: (prev, curr) => prev.tables != curr.tables,
+    builder: (context, state) {
+      if (state.tables.isEmpty) {
+        return const SizedBox.shrink();
+      }
+
+      // build ID → tableNumber map HERE
+      final Map<int, String> idToTableNumber = {
+        for (final t in state.tables) t.id: t.tableNumber,
+      };
+
+      return _AppBarIcon(
+        icon: Icons.check_circle_rounded,
+        color: Colors.greenAccent,
+        onTap: _selected.isNotEmpty
+            ? () {
+                final ids = _selected.toList();
+
+                final tableNumbers = ids
+                    .map(
+                      (id) => idToTableNumber[id] ?? id.toString(),
+                    )
+                    .toList();
+
+                // 1️⃣ merge API
+                context
+                    .read<TableBloc>()
+                    .add(MergeTables(tableIds: ids));
+
+                // 2️⃣ exit merge mode
+                setState(() => _mergeMode = false);
+
+                // 3️⃣ navigate to menu
+                Navigator.push(
+                  context,
+                  AnimatedPageRoute(
+                    page: BlocProvider(
+                      create: (_) => MenuBloc(ids),
+                      child: MenuScreen.fromTableIds(
+                        tableIds: ids,
+                        tableName: tableNumbers,
+                      ),
+                    ),
+                  ),
+                ).then((_) {
+                  setState(() {
+                    _selected.clear();
+                  });
+                });
+              }
+            : null,
+      );
+    },
+  ),
+
+          // _AppBarIcon(
+          //   icon: Icons.check_circle_rounded,
+          //   color: Colors.greenAccent,
+          //   onTap: _selected.isNotEmpty
+          //       ? () {
+          //           final ids = _selected.toList();
+
+          //           // 1️⃣ merge API
+          //           context.read<TableBloc>().add(MergeTables(tableIds: ids));
+
+          //           // 2️⃣ exit merge mode
+          //           setState(() => _mergeMode = false);
+
+                    
+                    
+          //           // 3️⃣ navigate to menu
+          //           Navigator.push(
+          //             context,
+          //             AnimatedPageRoute(
+          //               page: BlocProvider(
+          //                 create: (_) => MenuBloc(ids),
+          //                 child: MenuScreen.fromTableIds(tableIds: ids,tableName: ,),
+          //               ),
+          //             ),
+          //           ).then((_) {
+          //             // 4️⃣ clear selection on return
+          //             setState(() {
+          //               _selected.clear();
+          //             });
+          //           });
+          //         }
+          //       : null,
+          // ),
+      ],
+    );
+  }
+
+  Widget _buildBackground() {
+    return Container(
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage("assets/asmaraOuter.jpeg"),
+          fit: BoxFit.cover,
+          colorFilter: ColorFilter.mode(Colors.black12, BlendMode.darken),
+        ),
+      ),
+    );
+  }
 }
 
-// --- Entirely New _TableCard Widget (Soft UI / Neumorphic) ---
+// ================= TABLE CARD (UNCHANGED UI) =================
+
 class _TableCard extends StatelessWidget {
   final TableModel table;
   final bool isSelected;
@@ -398,50 +339,19 @@ class _TableCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusColor = _getStatusColor(table.status);
 
-    // --- UI Update: Define colors for the soft UI style ---
-    final cardColor = isSelected
-        ? Colors.blueAccent.withOpacity(0.7)
-        : Colors.white.withOpacity(0.5);
-    final shadowColor = Colors.black.withOpacity(0.1);
-    final highlightColor = Colors.white.withOpacity(0.7);
-
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeInOut,
-      // --- Animation: Scale transform ---
       transform: Matrix4.identity()..scale(isSelected ? 1.05 : 1.0),
-      transformAlignment: Alignment.center,
       decoration: BoxDecoration(
-        color: cardColor,
+        color: isSelected
+            ? Colors.blueAccent.withOpacity(0.7)
+            : Colors.white.withOpacity(0.8),
         borderRadius: BorderRadius.circular(24),
-        // --- UI Update: Animated border ---
         border: Border.all(
           color: isSelected ? Colors.blueAccent : Colors.transparent,
           width: isSelected ? 3 : 0,
         ),
-        // --- UI Update: Animated shadows for "soft" effect ---
-        boxShadow: isSelected
-            ? [
-                // No shadows when selected, just the border and scale
-                BoxShadow(
-                  color: Colors.blueAccent.withOpacity(0.3),
-                  blurRadius: 12,
-                  spreadRadius: 2,
-                ),
-              ]
-            : [
-                // "Extruded" look with a dark and light shadow
-                BoxShadow(
-                  color: shadowColor,
-                  offset: const Offset(5, 5),
-                  blurRadius: 10,
-                ),
-                BoxShadow(
-                  color: highlightColor,
-                  offset: const Offset(-5, -5),
-                  blurRadius: 10,
-                ),
-              ],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -454,14 +364,6 @@ class _TableCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: statusColor,
                 borderRadius: BorderRadius.circular(12),
-                // --- UI Update: Add a subtle shadow to the status pill ---
-                boxShadow: [
-                  BoxShadow(
-                    color: statusColor.withOpacity(0.5),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
               ),
               child: Text(
                 table.status,
@@ -473,20 +375,11 @@ class _TableCard extends StatelessWidget {
               ),
             ),
           ),
-          Expanded(
-            child: Center(
-              child: Icon(
-                Icons.table_restaurant, // Changed icon
-                size: 48,
-                color: isSelected ? Colors.white : Colors.grey[700],
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
+          const Icon(Icons.table_restaurant, size: 34),
           Text(
             mergedLabel != null
-                ? '${table.id} ($mergedLabel)'
-                : table.id.toString(),
+                ? 'Table ${table.tableNumber} ($mergedLabel)'
+                : 'Table ${table.tableNumber}',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: isSelected ? Colors.white : Colors.black87,
@@ -505,11 +398,15 @@ class _TableCard extends StatelessWidget {
         return Colors.orange;
       case "occupied":
         return Colors.red;
+        case 'order Ongoing':
+        return Colors.purple;
       default:
         return Colors.green;
+        
     }
-  }
+  } 
 }
+
 class _AppBarIcon extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;

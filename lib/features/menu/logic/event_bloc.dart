@@ -211,9 +211,9 @@ class MenuBloc extends Bloc<MenuEvent, MenuState> {
       final Order? posOrder = await _menuApiService.fetchOrdersForTable(
         event.tableId,
       );
-      if (posOrder == null || posOrder.items.isEmpty) {
-      return; 
-    }
+      // if (posOrder == null || posOrder.items.isEmpty) {
+      // return; 
+    
 
       // final newState = state.copyWith(
       //   allOrders: [if (posOrder != null) posOrder, ...state.allOrders],

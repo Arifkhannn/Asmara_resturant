@@ -10,6 +10,7 @@ Future<List<Order>> fetchOrdersForTable(int tableId) async {
 
   if (response.statusCode == 200) {
     final data = jsonDecode(response.body);
+    print('data of the ongoing order-----${data}');
 
     return (data as List).map((e) => Order.fromJson(e)).toList();
   } else {
